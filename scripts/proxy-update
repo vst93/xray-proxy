@@ -1,0 +1,62 @@
+#!/bin/bash
+# proxy-update - 更新订阅，生成 Xray 配置，重启服务
+
+SUB_URL_FILE="${HOME}/.config/xray/subscription_url"
+CONFIG_DIR="${HOME}/.config/xray"
+BACKUP_DIR="${CONFIG_DIR}/backups"
+SCRIPTS_DIR="$(dirname "$(realpath "$0")")"
+
+# 读取订阅地址
+if [ -f "$SUB_URL_FILE" ]; then
+    SUB_URL=$(cat "$SUB_URL_FILE")
+else
+    echo "错误: 未配置订阅地址"
+    echo "请运行: echo '你的订阅URL' > $SUB_URL_FILE"
+    exit 1
+fi
+
+mkdir -p "$BACKUP_DIR"
+DATE=$(date +%Y%m%d_%H%M%S)
+
+echo "正在更新订阅..."
+if ! curl -L -o /tmp/config_new.txt "$SUB_URL" --connect-timeout 30 --max-time 60 2>/dev/null; then
+    echo "下载失败，请检查网络连接"
+    exit 1
+fi
+echo "下载成功"
+
+# 检测格式：明文节点列表 or Base64 编码
+if grep -qE '^vless://|^vmess://|^hysteria2://|^trojan://' /tmp/config_new.txt; then
+    cp /tmp/config_new.txt /tmp/decoded_nodes.txt
+elif base64 -d /tmp/config_new.txt > /tmp/decoded_nodes.txt 2>&1; then
+    if ! grep -qE '^vless://|^vmess://|^hysteria2://|^trojan://' /tmp/decoded_nodes.txt; then
+        echo "Base64 解码后格式无效"
+        exit 1
+    fi
+else
+    echo "订阅格式无效"
+    exit 1
+fi
+
+# 备份旧配置
+[ -f "${CONFIG_DIR}/config.json" ] && cp "${CONFIG_DIR}/config.json" "${BACKUP_DIR}/config_${DATE}.json"
+
+# 生成 Xray 配置
+python3 "${SCRIPTS_DIR}/generate_config.py" /tmp/decoded_nodes.txt
+if [ $? -ne 0 ]; then
+    echo "配置生成失败"
+    exit 1
+fi
+
+# 重启服务
+echo "重启 xray 服务..."
+systemctl --user restart xray
+sleep 2
+
+if systemctl --user is-active xray >/dev/null 2>&1; then
+    echo "✅ xray 服务已重启"
+else
+    echo "❌ xray 启动失败，查看日志:"
+    echo "   journalctl --user -u xray -n 20"
+    exit 1
+fi

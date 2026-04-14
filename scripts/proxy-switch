@@ -1,0 +1,108 @@
+#!/usr/bin/env python3
+"""
+节点切换工具
+用法: proxy-switch [编号]
+
+  proxy-switch        列出所有可用节点
+  proxy-switch 5      切换到第 5 个节点
+"""
+import json, sys, subprocess, time, os
+
+CONFIG = os.path.expanduser("~/.config/xray/config.json")
+
+
+def list_nodes(config):
+    """列出所有可用节点"""
+    nodes = []
+    for o in config['outbounds']:
+        if o.get('protocol') != 'vless':
+            continue
+        tag = o.get('tag', '')
+        if '剩余' in tag or '套餐' in tag:
+            continue
+        sec = o.get('streamSettings', {}).get('security', '?')
+        addr = o['settings']['vnext'][0]['address']
+        nodes.append((len(nodes) + 1, tag, sec))
+    return nodes
+
+
+def switch(config, pick):
+    """切换到指定节点"""
+    nodes = list_nodes(config)
+    if pick < 1 or pick > len(nodes):
+        print(f"编号范围: 1-{len(nodes)}")
+        return False
+
+    num, tag, sec = nodes[pick - 1]
+
+    # 找到目标节点的 outbound
+    target = None
+    count = 0
+    for o in config['outbounds']:
+        if o.get('protocol') != 'vless':
+            continue
+        t = o.get('tag', '')
+        if '剩余' in t or '套餐' in t:
+            continue
+        count += 1
+        if count == pick:
+            target = o
+            break
+
+    if not target:
+        print("找不到该节点")
+        return False
+
+    # 更新 proxy 出口
+    for o in config['outbounds']:
+        if o.get('tag') == 'proxy':
+            o['protocol'] = target['protocol']
+            o['settings'] = target['settings']
+            o['streamSettings'] = target['streamSettings']
+            break
+
+    with open(CONFIG, 'w') as f:
+        json.dump(config, f, ensure_ascii=False, indent=2)
+
+    subprocess.run(['systemctl', '--user', 'restart', 'xray'],
+                   capture_output=True)
+    time.sleep(2)
+
+    # 快速测试
+    r = subprocess.run(
+        ['curl', '-x', 'http://127.0.0.1:7890', '--connect-timeout', '8',
+         '-s', '-o', '/dev/null', '-w', '%{http_code}',
+         'https://www.google.com/generate_204'],
+        capture_output=True, text=True, timeout=12)
+
+    status = "✅ 通了" if r.stdout.strip() == "204" else f"⚠️ {r.stdout.strip()}"
+    print(f"已切换到: {tag}")
+    print(f"测试: {status}")
+    return True
+
+
+def main():
+    with open(CONFIG) as f:
+        config = json.load(f)
+
+    if len(sys.argv) < 2:
+        nodes = list_nodes(config)
+        print(f"共 {len(nodes)} 个可用节点：\n")
+        for num, tag, sec in nodes:
+            marker = " ← 当前" if tag == 'proxy' else ""
+            print(f"  {num:2d}. [{sec:7s}] {tag}{marker}")
+        print(f"\n用法: proxy-switch <编号>")
+        return
+
+    try:
+        pick = int(sys.argv[1])
+    except ValueError:
+        print("请输入数字编号")
+        sys.exit(1)
+
+    if not switch(config, pick):
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
