@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/xray run -c /home/tar/.config/xray/config.json
+ExecStart=/usr/local/bin/xray run -c %h/.config/xray/config.json
 Environment=XRAY_LOCATION_ASSET=/usr/local/bin
 Restart=on-failure
 RestartSec=3
