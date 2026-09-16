@@ -4,7 +4,8 @@
 function proxy-on
     set -gx http_proxy http://127.0.0.1:7890
     set -gx https_proxy http://127.0.0.1:7890
-    set -gx ALL_PROXY socks5://127.0.0.1:7890
+    set -gx ALL_PROXY socks5://127.0.0.1:7891
+    set -gx socks_proxy socks5://127.0.0.1:7891
     echo "✅ 代理已开启"
     echo "   http_proxy: $http_proxy"
     echo "   https_proxy: $https_proxy"
@@ -15,6 +16,7 @@ function proxy-off
     set -e http_proxy
     set -e https_proxy
     set -e ALL_PROXY
+    set -e socks_proxy
     echo "❌ 代理已关闭"
 end
 
@@ -23,6 +25,7 @@ function proxy-status
     echo "  http_proxy: "(set -q http_proxy; and echo $http_proxy; or echo "未设置")
     echo "  https_proxy: "(set -q https_proxy; and echo $https_proxy; or echo "未设置")
     echo "  ALL_PROXY: "(set -q ALL_PROXY; and echo $ALL_PROXY; or echo "未设置")
+    echo "  socks_proxy: "(set -q socks_proxy; and echo $socks_proxy; or echo "未设置")
     echo ""
     echo "Xray 服务状态:"
     if systemctl --user is-active xray >/dev/null 2>&1
@@ -40,12 +43,14 @@ function proxy-status
     end
 end
 
+# command 用于绕过同名 fish 函数，直接调用已安装的可执行文件
+# （install.sh 会装到 /usr/local/bin）
 function proxy-update
-    bash ~/bin/proxy-update
+    command proxy-update $argv
 end
 
 function proxy-switch
-    python3 ~/bin/proxy-switch $argv
+    command proxy-switch $argv
 end
 
 function xray-status

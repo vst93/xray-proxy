@@ -47,9 +47,16 @@ fi
 # 安装 fish 函数
 if command -v fish &>/dev/null; then
     echo "安装 fish 函数..."
-    mkdir -p ~/.config/fish/functions
-    cp fish/proxy.fish ~/.config/fish/functions/
-    echo "✅ 已安装到 ~/.config/fish/functions/proxy.fish"
+    # 注意: fish 只会自动加载 ~/.config/fish/functions/<函数名>.fish。
+    # proxy.fish 里定义了 proxy-on/proxy-off/... 等多个函数，
+    # 放到 functions/ 目录下会因为找不到名为 proxy 的函数而被整个忽略。
+    # 因此安装到 conf.d/，启动时会被 source，所有函数都能注册。
+    FISH_CONF_DIR=~/.config/fish/conf.d
+    mkdir -p "$FISH_CONF_DIR"
+    cp fish/proxy.fish "$FISH_CONF_DIR/xray-proxy.fish"
+    # 清理旧版本误装的位置
+    rm -f ~/.config/fish/functions/proxy.fish
+    echo "✅ 已安装到 $FISH_CONF_DIR/xray-proxy.fish"
 fi
 
 echo ""
