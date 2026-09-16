@@ -31,23 +31,30 @@ cd xray-proxy
 # 3. 配置订阅地址
 echo "https://你的订阅地址" > ~/.config/xray/subscription_url
 
-# 4. 更新并启动
+# 4. 重新加载 shell（让 proxy-on/proxy-off 生效）
+source ~/.bashrc        # bash  （zsh 用 source ~/.zshrc）
+
+# 5. 更新并启动
 proxy-update
 ```
 
 ## 命令
 
-| 命令 | 说明 |
-|------|------|
-| `proxy-update` | 更新订阅，生成配置，重启 xray |
-| `proxy-on` | 设置代理环境变量 |
-| `proxy-off` | 取消代理环境变量 |
-| `proxy-status` | 查看代理状态和测试连接 |
-| `proxy-switch` | 列出所有节点 |
-| `proxy-switch 5` | 切换到第 5 个节点 |
-| `xray-status` | 查看 xray 服务状态 |
-| `xray-restart` | 重启 xray 服务 |
-| `xray-log` | 实时查看日志 |
+| 命令 | 类型 | 说明 |
+|------|------|------|
+| `proxy-update` | 可执行文件 | 更新订阅，生成配置，重启 xray |
+| `proxy-on` | shell 函数 | 设置代理环境变量 |
+| `proxy-off` | shell 函数 | 取消代理环境变量 |
+| `proxy-status` | shell 函数 | 查看代理状态和测试连接 |
+| `proxy-switch` | 可执行文件 | 列出所有节点 |
+| `proxy-switch 5` | 可执行文件 | 切换到第 5 个节点 |
+| `xray-status` | shell 函数 | 查看 xray 服务状态 |
+| `xray-restart` | shell 函数 | 重启 xray 服务 |
+| `xray-log` | shell 函数 | 实时查看日志 |
+
+> **注意：** `proxy-on` / `proxy-off` / `proxy-status` / `xray-*` 是
+> bash / zsh / fish 的 shell 函数（需要修改「当前」shell 的环境变量）。
+> 运行 `install.sh` 后需重新加载配置（`source ~/.bashrc` 或重开终端）才能使用。
 
 ## 支持的协议
 
@@ -67,6 +74,9 @@ scripts/
 
 systemd/
   xray.service          # systemd 用户服务
+
+shell/
+  proxy.sh              # bash / zsh shell 函数
 
 fish/
   proxy.fish            # fish shell 函数

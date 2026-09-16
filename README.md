@@ -32,23 +32,31 @@ cd xray-proxy
 # 3. Set subscription URL
 echo "https://your-subscription-url" > ~/.config/xray/subscription_url
 
-# 4. Update and start
+# 4. Reload your shell (so proxy-on/proxy-off become available)
+source ~/.bashrc        # bash  (zsh: source ~/.zshrc)
+
+# 5. Update and start
 proxy-update
 ```
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `proxy-update` | Download subscription, generate config, restart xray |
-| `proxy-on` | Set proxy env vars (http_proxy, ALL_PROXY) |
-| `proxy-off` | Unset proxy env vars |
-| `proxy-status` | Show proxy status and test connectivity |
-| `proxy-switch` | List all available nodes |
-| `proxy-switch 5` | Switch to node #5 |
-| `xray-status` | Show xray service status |
-| `xray-restart` | Restart xray service |
-| `xray-log` | Tail xray logs |
+| Command | Type | Description |
+|---------|------|-------------|
+| `proxy-update` | executable | Download subscription, generate config, restart xray |
+| `proxy-on` | shell function | Set proxy env vars (http_proxy, ALL_PROXY) |
+| `proxy-off` | shell function | Unset proxy env vars |
+| `proxy-status` | shell function | Show proxy status and test connectivity |
+| `proxy-switch` | executable | List all available nodes |
+| `proxy-switch 5` | executable | Switch to node #5 |
+| `xray-status` | shell function | Show xray service status |
+| `xray-restart` | shell function | Restart xray service |
+| `xray-log` | shell function | Tail xray logs |
+
+> **Note:** `proxy-on` / `proxy-off` / `proxy-status` / `xray-*` are shell
+> functions for bash, zsh and fish, because they must modify the *current*
+> shell's environment. After running `install.sh`, reload your shell
+> (`source ~/.bashrc`, or open a new terminal) before using them.
 
 ## Supported Protocols
 
@@ -68,6 +76,9 @@ scripts/
 
 systemd/
   xray.service          # Systemd user service
+
+shell/
+  proxy.sh              # bash / zsh shell functions
 
 fish/
   proxy.fish            # Fish shell functions
