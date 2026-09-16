@@ -16,6 +16,8 @@ Xray-core 25.3.6 (Go 1.24.1) is the reference implementation for VLESS REALITY a
 
 ## Installation
 
+Requirements: `python3` (3.6+), `curl`, `systemd --user`.
+
 ```bash
 # 1. Install xray-core
 # Arch Linux:
@@ -89,6 +91,14 @@ fish/
 - Subscription URL: `~/.config/xray/subscription_url`
 - Generated config: `~/.config/xray/config.json`
 - Backups: `~/.config/xray/backups/`
+
+## Requirements
+
+- Python 3.6 or newer (scripts avoid 3.7+ only APIs such as
+  `subprocess.run(capture_output=..., text=...)` so they work on
+  CentOS 7 / older distros).
+- `curl`
+- `systemd` with user services (`systemctl --user`)
 
 ## Comparison with mihomo/Clash ecosystem
 

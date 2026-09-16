@@ -64,8 +64,10 @@ def switch(config, pick):
     with open(CONFIG, 'w') as f:
         json.dump(config, f, ensure_ascii=False, indent=2)
 
+    # 注: 使用 stdout/stderr/universal_newlines 而非 capture_output/text，
+    # 以兼容 Python 3.6 (CentOS 7 等老系统自带 3.6)。
     subprocess.run(['systemctl', '--user', 'restart', 'xray'],
-                   capture_output=True)
+                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     time.sleep(2)
 
     # 快速测试
@@ -73,7 +75,8 @@ def switch(config, pick):
         ['curl', '-x', 'http://127.0.0.1:7890', '--connect-timeout', '8',
          '-s', '-o', '/dev/null', '-w', '%{http_code}',
          'https://www.google.com/generate_204'],
-        capture_output=True, text=True, timeout=12)
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        universal_newlines=True, timeout=12)
 
     status = "✅ 通了" if r.stdout.strip() == "204" else f"⚠️ {r.stdout.strip()}"
     print(f"已切换到: {tag}")

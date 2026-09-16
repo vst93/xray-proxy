@@ -15,6 +15,8 @@ Xray-core 25.3.6 (Go 1.24.1) 是 VLESS REALITY 的原生实现，完美兼容。
 
 ## 安装
 
+依赖: `python3` (3.6+)、`curl`、`systemd --user`。
+
 ```bash
 # 1. 安装 xray-core
 # Arch Linux:
@@ -87,6 +89,13 @@ fish/
 - 订阅地址：`~/.config/xray/subscription_url`
 - 生成配置：`~/.config/xray/config.json`
 - 备份目录：`~/.config/xray/backups/`
+
+## 环境要求
+
+- Python 3.6 或更高版本（脚本避开了 `subprocess.run(capture_output=..., text=...)`
+  等 3.7+ 专属 API，以便在 CentOS 7 等老系统上运行）。
+- `curl`
+- `systemd` 且支持用户服务（`systemctl --user`）
 
 ## 与 mihomo/Clash 生态的区别
 
